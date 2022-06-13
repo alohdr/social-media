@@ -1,20 +1,30 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const con = require('./config/database');
+const atob = require('atob')
+const con = require('../config/database');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const app = express();
-const PORT = process.env.PORT || 3000;
+
+const serverless = require('serverless-http')
+const router = express.Router()
+// const PORT = process.env.PORT || 3000;
 
 // Set up Global configuration access
 dotenv.config();
 
 // set body parser
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+router.use(bodyParser.json());
+router.use(bodyParser.urlencoded({ extended: false }));
+
+router.get('/', (req, res) => {
+    res.json({
+        nama : "hendro"
+    })
+})
 
 // Register
-app.post('/register', (req, res) => {
+router.post('/register', (req, res) => {
     const data = {...req.body};
 
     console.log(data);
@@ -33,7 +43,7 @@ app.post('/register', (req, res) => {
 })
 
 // Login
-app.post('/login', (req,res) => {
+router.post('/login', (req,res) => {
     const data = {...req.body};
     const querySearch = 'SELECT id, name, email, password FROM users WHERE email = ?';
 
@@ -64,7 +74,7 @@ app.post('/login', (req,res) => {
 })
 
 // add Friend
-app.post('/add-friend', (req, res) => {
+router.post('/add-friend', (req, res) => {
     const data = {...req.body}
 
     const bearerHeader = req.headers['authorization']
@@ -90,7 +100,7 @@ app.post('/add-friend', (req, res) => {
 })
 
 // acc friend
-app.put('/acc-friend/:id', (req, res) => {
+router.put('/acc-friend/:id', (req, res) => {
      // buat variabel penampung data dan query sql
      const data = { ...req.body };
      const querySearch = 'SELECT * FROM users_relation WHERE id = ?';
@@ -123,11 +133,11 @@ app.put('/acc-friend/:id', (req, res) => {
 })
 
 // list user request follow friend
-app.get('/list-acc-friend', (req, res) => {
+router.get('/list-acc-friend', (req, res) => {
 
     const bearerHeader = req.headers['authorization']
-
-    const bearer = atob(bearerHeader.split('.')[1])
+    const bearerHeaderSplit = bearerHeader.split('.')[1]
+    const bearer = atob(bearerHeaderSplit)
     const bearerToken = JSON.parse(bearer)
 
     // buat query sql
@@ -148,7 +158,7 @@ app.get('/list-acc-friend', (req, res) => {
 })
 
 // list friend
-app.get('/list-friend', (req, res) => {
+router.get('/list-friend', (req, res) => {
 
     const bearerHeader = req.headers['authorization']
 
@@ -173,7 +183,7 @@ app.get('/list-friend', (req, res) => {
 })
 
 // Reject User
-app.delete('/reject/:id', (req, res) => {
+router.delete('/reject/:id', (req, res) => {
  // buat query sql untuk mencari data dan hapus
  const querySearch = 'SELECT * FROM users_relation WHERE id = ?';
  const queryDelete = 'DELETE FROM users_relation WHERE id = ?';
@@ -204,4 +214,7 @@ app.delete('/reject/:id', (req, res) => {
 })
 
 // buat server nya
-app.listen(PORT, () => console.log(`Server running at port: ${PORT}`));
+// app.listen(PORT, () => console.log(`Server running at port: ${PORT}`));
+app.use(`/.netlify/functions/index`, router);
+module.exports = app;
+module.exports.handler = serverless(app)

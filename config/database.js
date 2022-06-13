@@ -3,9 +3,9 @@ const mysql = require('mysql2');
 // buat konfigurasi koneksi
 const koneksi = mysql.createConnection({
     host: 'localhost',
-    user: 'maul',
-    password: 'maul',
-    database: 'TECHNICAL',
+    user: 'root',
+    password: 'password',
+    database: 'social-media',
     multipleStatements: true,
 });
 
